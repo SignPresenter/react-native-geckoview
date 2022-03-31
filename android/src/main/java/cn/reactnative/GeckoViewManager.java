@@ -37,6 +37,9 @@ public class GeckoViewManager extends SimpleViewManager<View> {
     public View createViewInstance(ThemedReactContext c) {
         GeckoView view = new GeckoView(c);
         GeckoSession session = new GeckoSession();
+        GeckoPermissionDelegate perm = new GeckoPermissionDelegate();
+        perm.androidPermissionRequestCode = 2;
+        session.setPermissionDelegate(perm);
         if (mGeckoRuntime == null) {
             mGeckoRuntime = GeckoRuntime.create(c);
         }

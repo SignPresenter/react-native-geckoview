@@ -76,6 +76,14 @@ public class GeckoViewManager extends SimpleViewManager<View> {
         return view;
     }
 
+    @ReactProp(name = "injectedJS")
+    public void setInjectedJS(GeckoView view, @Nullable ReadableMap injectedJS) {
+        if (injectedJS.hasKey("js")) {
+            String js = injectedJS.getString("js");
+            evaluateJavascript(js);
+        }
+    }
+
     @ReactProp(name = "source")
     public void setSource(GeckoView view, @Nullable ReadableMap source) {
         GeckoSession session = view.getSession();
@@ -98,15 +106,16 @@ public class GeckoViewManager extends SimpleViewManager<View> {
 
     void installExtension() {
         WebExtensionController controller = mGeckoRuntime.getWebExtensionController();
-        GeckoResult result = mGeckoRuntime.registerWebExtension(new WebExtension("resource://android/assets/messaging/"));
+        WebExtension ext = new WebExtension("resource://android/assets/messaging/");
+        GeckoResult result = mGeckoRuntime.registerWebExtension(ext);
         result.accept(
                 extension -> {
                     Log.i("MessageDelegate", "Extension installed: " + extension);
-                    WebExtension ext = (WebExtension)extension;
-                    ext.setMessageDelegate(mMessagingDelegate, "browser");
+
                 },
                 e -> Log.e("MessageDelegate", "Error registering WebExtension")
         );
+        if (ext!=null) ext.setMessageDelegate(mMessagingDelegate, "browser");
     }
 
     private final WebExtension.MessageDelegate mMessagingDelegate = new WebExtension.MessageDelegate() {

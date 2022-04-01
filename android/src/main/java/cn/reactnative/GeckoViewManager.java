@@ -38,9 +38,10 @@ public class GeckoViewManager extends SimpleViewManager<View> {
     public View createViewInstance(ThemedReactContext c) {
         GeckoView view = new GeckoView(c);
         GeckoSession session = new GeckoSession();
+        session.setPermissionDelegate(new GeckoPermissionDelegate());
         if (mGeckoRuntime == null) {
             GeckoRuntimeSettings.Builder builder = new GeckoRuntimeSettings.Builder();
-            //builder.autoplayDefault(GeckoRuntimeSettings.AUTOPLAY_DEFAULT_ALLOWED);
+            builder.autoplayDefault(GeckoRuntimeSettings.AUTOPLAY_DEFAULT_ALLOWED);
             builder.javaScriptEnabled(true);
             //builder.configFilePath("./geckoview2.yaml");
 
@@ -54,7 +55,7 @@ public class GeckoViewManager extends SimpleViewManager<View> {
                 new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
                         ViewGroup.LayoutParams.MATCH_PARENT));
 
-        session.setPermissionDelegate(new GeckoPermissionDelegate());
+
         return view;
     }
 

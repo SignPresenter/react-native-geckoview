@@ -22,6 +22,8 @@ import com.facebook.react.uimanager.SimpleViewManager;
 import com.facebook.react.uimanager.ThemedReactContext;
 import com.facebook.react.uimanager.annotations.ReactProp;
 
+import java.nio.charset.StandardCharsets;
+
 public class GeckoViewManager extends SimpleViewManager<View> {
     private static WebExtension.Port mPort;
     public static final String REACT_CLASS = "GeckoView";
@@ -80,7 +82,7 @@ public class GeckoViewManager extends SimpleViewManager<View> {
     public void setInjectedJS(GeckoView view, @Nullable ReadableMap injectedJS) {
         if (injectedJS.hasKey("js")) {
             String js = injectedJS.getString("js");
-            evaluateJavascript(js);
+            if (!js.equals("")) evaluateJavascript(js);
         }
     }
 
@@ -92,7 +94,8 @@ public class GeckoViewManager extends SimpleViewManager<View> {
             if (source.hasKey("html")) {
                 String html = source.getString("html");
 //                String baseUrl = source.hasKey("baseUrl") ? source.getString("baseUrl") : "";
-                session.loadString(html, HTML_MIME_TYPE);
+                session.loadData(html.getBytes(StandardCharsets.UTF_8), HTML_MIME_TYPE);
+                //session.loadData("<html><body>Hello World</body></html>".getBytes(StandardCharsets.UTF_8), "text/html");
                 return;
             }
             if (source.hasKey("uri")) {

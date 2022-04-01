@@ -1,14 +1,21 @@
 package cn.reactnative;
 
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.mozilla.geckoview.GeckoResult;
 import org.mozilla.geckoview.GeckoRuntime;
 import org.mozilla.geckoview.GeckoRuntimeSettings;
 import org.mozilla.geckoview.GeckoSession;
 import org.mozilla.geckoview.GeckoView;
+import org.mozilla.geckoview.WebExtension;
+import org.mozilla.geckoview.WebExtensionController;
 
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.uimanager.SimpleViewManager;
@@ -16,7 +23,7 @@ import com.facebook.react.uimanager.ThemedReactContext;
 import com.facebook.react.uimanager.annotations.ReactProp;
 
 public class GeckoViewManager extends SimpleViewManager<View> {
-
+    private static WebExtension.Port mPort;
     public static final String REACT_CLASS = "GeckoView";
     private static GeckoRuntime mGeckoRuntime = null;
 
@@ -27,6 +34,13 @@ public class GeckoViewManager extends SimpleViewManager<View> {
     // Use `webView.loadUrl("about:blank")` to reliably reset the view
     // state and release page resources (including any running JavaScript).
     protected static final String BLANK_URL = "about:blank";
+
+    /*
+    if (sRuntime == null) {
+        GeckoRuntimeSettings settings =
+                new GeckoRuntimeSettings.Builder().remoteDebuggingEnabled(true).build();
+        sRuntime = GeckoRuntime.create(this, settings);
+    }*/
 
     @Override
     public String getName() {
@@ -47,6 +61,9 @@ public class GeckoViewManager extends SimpleViewManager<View> {
 
 
             mGeckoRuntime = GeckoRuntime.create(c, builder.build());
+            mGeckoRuntime.getSettings().setRemoteDebuggingEnabled(true);
+            installExtension();
+
             //mGeckoRuntime.setWebNotificationDelegate();
         }
         session.open(mGeckoRuntime);
@@ -78,4 +95,70 @@ public class GeckoViewManager extends SimpleViewManager<View> {
         }
         session.loadUri(BLANK_URL);
     }
+
+    void installExtension() {
+        WebExtensionController controller = mGeckoRuntime.getWebExtensionController();
+        GeckoResult result = mGeckoRuntime.registerWebExtension(new WebExtension("resource://android/assets/messaging/"));
+        result.accept(
+                extension -> {
+                    Log.i("MessageDelegate", "Extension installed: " + extension);
+                    WebExtension ext = (WebExtension)extension;
+                    ext.setMessageDelegate(mMessagingDelegate, "browser");
+                },
+                e -> Log.e("MessageDelegate", "Error registering WebExtension")
+        );
+    }
+
+    private final WebExtension.MessageDelegate mMessagingDelegate = new WebExtension.MessageDelegate() {
+
+        @Nullable
+        @Override
+        public void onConnect(@NonNull WebExtension.Port port) {
+            Log.e("MessageDelegate", "onConnect");
+            mPort = port;
+            mPort.setDelegate(mPortDelegate);
+        }
+    };
+
+    private final WebExtension.PortDelegate mPortDelegate = new WebExtension.PortDelegate() {
+        @Override
+        public void onPortMessage(final @NonNull Object message,  final @NonNull WebExtension.Port port) {
+            Log.e("MessageDelegate", "Received message from extension: "  + message);
+            try {
+                if (message instanceof JSONObject) {
+                    Log.e("MessageDelegate", "Received JSONObject");
+                    JSONObject jsonObject = (JSONObject) message;
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
+        @Override
+        public void onDisconnect(final @NonNull WebExtension.Port port) {
+            Log.e("MessageDelegate:", "onDisconnect");
+            if (port == mPort) {
+                mPort = null;
+            }
+        }
+    };
+
+    public void evaluateJavascript(String javascriptString) {
+        try {
+            long id = System.currentTimeMillis();
+            Log.e("evalJavascript:id:", id + "");
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put("action", "evalJavascript");
+            jsonObject.put("data", javascriptString);
+            jsonObject.put("id", id);
+            Log.e("evalJavascript:", jsonObject.toString());
+            mPort.postMessage(jsonObject);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+    }
+
+
+
 }

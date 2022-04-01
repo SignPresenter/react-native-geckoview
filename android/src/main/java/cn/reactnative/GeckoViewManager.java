@@ -6,6 +6,7 @@ import android.view.ViewGroup;
 import androidx.annotation.Nullable;
 
 import org.mozilla.geckoview.GeckoRuntime;
+import org.mozilla.geckoview.GeckoRuntimeSettings;
 import org.mozilla.geckoview.GeckoSession;
 import org.mozilla.geckoview.GeckoView;
 
@@ -37,17 +38,23 @@ public class GeckoViewManager extends SimpleViewManager<View> {
     public View createViewInstance(ThemedReactContext c) {
         GeckoView view = new GeckoView(c);
         GeckoSession session = new GeckoSession();
-        GeckoPermissionDelegate perm = new GeckoPermissionDelegate();
-        perm.androidPermissionRequestCode = 2;
-        session.setPermissionDelegate(perm);
         if (mGeckoRuntime == null) {
-            mGeckoRuntime = GeckoRuntime.create(c);
+            GeckoRuntimeSettings.Builder builder = new GeckoRuntimeSettings.Builder();
+            //builder.autoplayDefault(GeckoRuntimeSettings.AUTOPLAY_DEFAULT_ALLOWED);
+            builder.javaScriptEnabled(true);
+            //builder.configFilePath("./geckoview2.yaml");
+
+
+            mGeckoRuntime = GeckoRuntime.create(c, builder.build());
+            //mGeckoRuntime.setWebNotificationDelegate();
         }
         session.open(mGeckoRuntime);
         view.setSession(session);
         view.setLayoutParams(
                 new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
                         ViewGroup.LayoutParams.MATCH_PARENT));
+
+        session.setPermissionDelegate(new GeckoPermissionDelegate());
         return view;
     }
 
@@ -64,47 +71,6 @@ public class GeckoViewManager extends SimpleViewManager<View> {
             }
             if (source.hasKey("uri")) {
                 String url = source.getString("uri");
-                /*
-                String previousUrl = view.getUrl();
-                if (previousUrl != null && previousUrl.equals(url)) {
-                    return;
-                }
-                if (source.hasKey("method")) {
-                    String method = source.getString("method");
-                    if (method.equalsIgnoreCase(HTTP_METHOD_POST)) {
-                        byte[] postData = null;
-                        if (source.hasKey("body")) {
-                            String body = source.getString("body");
-                            try {
-                                postData = body.getBytes("UTF-8");
-                            } catch (UnsupportedEncodingException e) {
-                                postData = body.getBytes();
-                            }
-                        }
-                        if (postData == null) {
-                            postData = new byte[0];
-                        }
-                        view.postUrl(url, postData);
-                        return;
-                    }
-                }
-                HashMap<String, String> headerMap = new HashMap<>();
-                if (source.hasKey("headers")) {
-                    ReadableMap headers = source.getMap("headers");
-                    ReadableMapKeySetIterator iter = headers.keySetIterator();
-                    while (iter.hasNextKey()) {
-                        String key = iter.nextKey();
-                        if ("user-agent".equals(key.toLowerCase(Locale.ENGLISH))) {
-                            if (view.getSettings() != null) {
-                                view.getSettings().setUserAgentString(headers.getString(key));
-                            }
-                        } else {
-                            headerMap.put(key, headers.getString(key));
-                        }
-                    }
-                }
-                view.loadUrl(url, headerMap);
-                */
                 session.loadUri(url);
                 return;
             }

@@ -1,0 +1,12 @@
+- name: dom.webnotifications.requireuserinteraction
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+- name: media.allowed-to-play.enabled
+  type: bool
+  value: true
+  mirror: always
+- name: media.geckoview.autoplay.request
+  type: bool
+  value: false
+  mirror: always

@@ -25,6 +25,7 @@ import com.facebook.react.uimanager.annotations.ReactProp;
 import java.nio.charset.StandardCharsets;
 
 public class GeckoViewManager extends SimpleViewManager<View> {
+    private static JSONObject pendingMessage = null;
     private static WebExtension.Port mPort;
     public static final String REACT_CLASS = "GeckoView";
     private static GeckoRuntime mGeckoRuntime = null;
@@ -35,7 +36,7 @@ public class GeckoViewManager extends SimpleViewManager<View> {
     protected static final String HTTP_METHOD_POST = "POST";
     // Use `webView.loadUrl("about:blank")` to reliably reset the view
     // state and release page resources (including any running JavaScript).
-    protected static final String BLANK_URL = "about:blank";
+    protected static final String BLANK_URL = "https://signpresenter.com/"; //"about:blank";
 
     /*
     if (sRuntime == null) {
@@ -61,7 +62,7 @@ public class GeckoViewManager extends SimpleViewManager<View> {
             builder.javaScriptEnabled(true);
             //builder.configFilePath("./geckoview2.yaml");
 
-
+            builder.consoleOutput(true);  //GeckoConsole or com.signpresenter.player in Logcat
             mGeckoRuntime = GeckoRuntime.create(c, builder.build());
             mGeckoRuntime.getSettings().setRemoteDebuggingEnabled(true);
             installExtension();
@@ -129,6 +130,10 @@ public class GeckoViewManager extends SimpleViewManager<View> {
             Log.e("MessageDelegate", "onConnect");
             mPort = port;
             mPort.setDelegate(mPortDelegate);
+            if (pendingMessage!=null) {
+                mPort.postMessage(pendingMessage);
+                pendingMessage = null;
+            }
         }
     };
 
@@ -164,7 +169,8 @@ public class GeckoViewManager extends SimpleViewManager<View> {
             jsonObject.put("data", javascriptString);
             jsonObject.put("id", id);
             Log.e("evalJavascript:", jsonObject.toString());
-            mPort.postMessage(jsonObject);
+            if (mPort!=null) mPort.postMessage(jsonObject);
+            else pendingMessage = jsonObject;
         } catch (Exception e) {
             e.printStackTrace();
         }

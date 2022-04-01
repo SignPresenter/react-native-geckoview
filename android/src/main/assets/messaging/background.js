@@ -1,10 +1,15 @@
 'use strict';
 const port = browser.runtime.connectNative("browser");
 
+console.log("background script initialized")
+
 async function sendMessageToTab(message) {
   try {
     let tabs = await browser.tabs.query({})
     console.log(`background:tabs:${tabs}`)
+    console.log(JSON.stringify(tabs));
+    console.log("Message:");
+    console.log(JSON.stringify(message));
     return await browser.tabs.sendMessage(
       tabs[tabs.length - 1].id,
       message
@@ -15,6 +20,19 @@ async function sendMessageToTab(message) {
   }
 }
 
+
+
+browser.runtime.onMessage.addListener((data, sender) => {
+  console.log("*******BROWSER Message received")
+  let action = data.action;
+  console.log("background:content:onMessage:" + action);
+  if (action === 'JSBridge') {
+    port.postMessage(data);
+  }
+  return Promise.resolve('done');
+})
+
+
 port.onMessage.addListener(request => {
   let action = request.action;
   if (action === "evalJavascript") {
@@ -24,14 +42,4 @@ port.onMessage.addListener(request => {
       console.log(`background:sendMessageToTab:resp:error:${e}`)
     });
   }
-})
-
-
-browser.runtime.onMessage.addListener((data, sender) => {
-  let action = data.action;
-  console.log("background:content:onMessage:" + action);
-  if (action === 'JSBridge') {
-    port.postMessage(data);
-  }
-  return Promise.resolve('done');
 })

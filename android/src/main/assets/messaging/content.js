@@ -1,6 +1,9 @@
-console.log(`content:start`);
+console.log("plugincontent:start");
+
+
 let JSBridge = {
   postMessage: function (message) {
+    console.log("plugincontent:postMessage: " + JSON.stringify(JSBridge))
     browser.runtime.sendMessage({
       action: "JSBridge",
       data: message
@@ -12,8 +15,10 @@ window.wrappedJSObject.JSBridge = cloneInto(
   window,
   { cloneFunctions: true });
 
+console.log("plugincontent:JSBRIDGE: " + JSON.stringify(JSBridge))
+
 browser.runtime.onMessage.addListener((data, sender) => {
-  console.log("content:eval:" + data);
+  //console.log("plugincontent:eval:" + data);
   if (data.action === 'evalJavascript') {
     let evalCallBack = {
       id: data.id,
@@ -21,7 +26,7 @@ browser.runtime.onMessage.addListener((data, sender) => {
     }
     try {
       let result = window.eval(data.data);
-      console.log("content:eval:result" + result);
+      console.log("plugincontent:eval:result" + result);
       if (result) {
         evalCallBack.data = result;
       } else {
@@ -34,3 +39,4 @@ browser.runtime.onMessage.addListener((data, sender) => {
     return Promise.resolve(evalCallBack);
   }
 });
+console.log("plugincontent:end");

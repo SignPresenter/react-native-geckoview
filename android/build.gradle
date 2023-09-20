@@ -25,6 +25,12 @@ apply plugin: 'com.android.library'
 apply plugin: 'maven'
 
 buildscript {
+    ext {
+      buildToolsVersion = "28.0.3"
+      minSdkVersion = 16
+      compileSdkVersion = 28
+      targetSdkVersion = 28
+    }
     // The Android Gradle plugin is only required when opening the android folder stand-alone.
     // This avoids unnecessary downloads and potential conflicts when the library is included as a
     // module dependency in an application project.

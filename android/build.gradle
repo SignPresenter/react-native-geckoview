@@ -15,7 +15,7 @@ def DEFAULT_BUILD_TOOLS_VERSION = '33.0.0'
 def DEFAULT_MIN_SDK_VERSION = 26
 def DEFAULT_TARGET_SDK_VERSION = 33
 // https://maven.mozilla.org/?prefix=maven2/org/mozilla/geckoview/geckoview/
-def DEFAULT_GECKOVIEW_VERSION = '119.0.20231019122658'
+def DEFAULT_GECKOVIEW_VERSION = '72.0.20200107212822'
 
 def safeExtGet(prop, fallback) {
     rootProject.ext.has(prop) ? rootProject.ext.get(prop) : fallback
@@ -75,7 +75,8 @@ repositories {
         url "$rootDir/../node_modules/jsc-android/dist"
     }
     google()
-    jcenter()
+	jcenter()
+    
 }
 
 dependencies {
@@ -119,7 +120,7 @@ afterEvaluate { project ->
     task androidJavadoc(type: Javadoc) {
         source = android.sourceSets.main.java.srcDirs
         classpath += files(android.bootClasspath)
-        classpath += files(project.getConfigurations().getByName('implementation').asList())
+        classpath += files(project.getConfigurations().getByName('compile').asList())
         include '**/*.java'
     }
 
